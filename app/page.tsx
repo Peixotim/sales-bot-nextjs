@@ -1,65 +1,123 @@
-import Image from "next/image";
+'use client';
+import { BackgroundBlobs } from '@/components/BackgroundBlobs';
+import { StatusBadge } from '@/components/StatusBadge';
+import { useWhatsApp } from '@/src/hooks/useWhatsApp';
+import { motion, AnimatePresence } from 'framer-motion';
+import QRCode from 'react-qr-code';
+import { Smartphone, RefreshCw, ShieldCheck, Zap, } from 'lucide-react';
+import { FloatingDock } from '@/components/FloatingDock';
 
 export default function Home() {
+  const { status, qrCode, connectedId } = useWhatsApp();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="min-h-screen flex items-center justify-center p-4 sm:p-8 relative font-sans selection:bg-neon selection:text-black">
+      <FloatingDock/>
+      <BackgroundBlobs />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-5xl glass-panel rounded-[3rem] p-8 sm:p-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+      >
+        
+        <div className="flex flex-col gap-8">
+          <div className="space-y-2">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="w-10 h-10 rounded-xl bg-neon flex items-center justify-center text-black font-bold">
+                <Zap size={20} fill="black" />
+              </div>
+              <span className="text-white/60 text-sm font-medium tracking-wider">SALES AI BOT 1.0</span>
+            </motion.div>
+            
+            <h1 className="text-5xl sm:text-6xl font-bold leading-tight tracking-tighter">
+              Automação <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Inteligente.</span>
+            </h1>
+            <p className="text-lg text-white/50 max-w-md leading-relaxed">
+              Gerencie seus leads, responda com IA e escale suas vendas via WhatsApp com a tecnologia Gemini Flash.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+             <StatusBadge status={status} />
+          </div>
+          <AnimatePresence>
+            {status === 'CONNECTED' && connectedId && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4">
+                  <div className="bg-green-500/20 p-3 rounded-full">
+                    <Smartphone className="text-green-400" size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/40 uppercase tracking-widest">Conectado como</p>
+                    <p className="text-white font-mono text-lg">{connectedId.split('@')[0]}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex justify-center lg:justify-end">
+          <div className="relative w-[350px] h-[450px] bg-dark/80 border border-white/10 rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-2xl overflow-hidden group">
+
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-neon/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+            {status === 'QR_CODE_READY' && qrCode ? (
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white p-4 rounded-xl"
+              >
+                <QRCode 
+                  value={qrCode} 
+                  size={220}
+                  fgColor="#000000"
+                  bgColor="#ffffff"
+                />
+                <p className="text-black mt-4 text-center font-medium text-sm">Escaneie com seu WhatsApp</p>
+              </motion.div>
+            ) : status === 'CONNECTED' ? (
+              <motion.div 
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="flex flex-col items-center gap-6"
+              >
+                <div className="w-32 h-32 rounded-full bg-neon/10 flex items-center justify-center border border-neon/20 shadow-[0_0_40px_rgba(137,243,54,0.2)]">
+                  <ShieldCheck size={64} className="text-neon" />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-white">Tudo Pronto</h3>
+                  <p className="text-white/40 text-sm mt-2">Seu bot está ouvindo e respondendo.</p>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="flex flex-col items-center gap-4 opacity-50">
+                <RefreshCw className="animate-spin text-white" size={40} />
+                <p className="text-sm text-white/60">Conectando servidor...</p>
+              </div>
+            )}
+
+          </div>
         </div>
-      </main>
-    </div>
+
+      </motion.div>
+      
+     
+      <div className="absolute bottom-6 text-white/20 text-xs tracking-widest">
+            Desenvolvido por : Pedro Peixoto
+      </div>  
+    </main>
   );
 }
