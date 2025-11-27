@@ -335,8 +335,6 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
-
-        {/* PAINEL ANIMADO (Transição Lateral) */}
         <motion.div
           initial={false}
           animate={isRegisterMode ? "register" : "login"}
@@ -358,7 +356,7 @@ export default function AuthPage() {
                     💬
                   </div>
                   <h1 className="mb-4 text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-                    Sales Bot
+                    Bot De Conversa
                   </h1>
                   <p className="mb-6 text-lg leading-relaxed font-medium text-white/90">
                     Escale suas vendas no automático.
@@ -401,13 +399,11 @@ export default function AuthPage() {
       </div>
 
       <div className="fixed bottom-6 text-[10px] font-bold tracking-[0.2em] text-[#333] uppercase dark:text-[#444]">
-        SalesBot Version 1.0
+        Bot De Conversa Version 1.0
       </div>
     </div>
   );
 }
-
-// Componente de Input Reutilizável
 const InputGroup = ({
   icon,
   label,

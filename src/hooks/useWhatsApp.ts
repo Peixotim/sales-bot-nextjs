@@ -91,10 +91,8 @@ export const useWhatsApp = () => {
   const connectBot = async () => {
     setIsLoading(true);
     try {
-      // O tipo de retorno aqui não importa muito pois só queremos o status 200
       await api.get<void>('/whatsapp/qr');
     } catch (error: unknown) {
-      // Tratamento de erro tipado
       if (error instanceof Error) {
         console.error("Erro ao conectar bot:", error.message);
       } else {

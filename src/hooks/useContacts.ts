@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { TOKEN_KEY } from '../constants/app-keys';
+import { TOKEN_KEY } from '@/src/constants/app-keys';
 const BASE_URL = 'http://localhost:8080';
 
 export interface BlockedContact {
@@ -26,8 +26,6 @@ export const useContacts = () => {
     return () => { isMounted.current = false; };
   }, []);
 
-  // --- HELPER PARA CABEÇALHOS ---
-  // Como removemos o api.ts, precisamos gerar o header com token manualmente
   const getConfig = () => {
     const token = localStorage.getItem(TOKEN_KEY);
     return {
@@ -41,7 +39,6 @@ export const useContacts = () => {
   const fetchBlacklist = useCallback(async () => {
     try {
       const { data } = await axios.get(`${BASE_URL}/contacts/blacklist`, getConfig());
-      
       if (isMounted.current) {
         setBlacklist(Array.isArray(data) ? data : []);
       }
@@ -54,7 +51,6 @@ export const useContacts = () => {
   const fetchActiveChats = useCallback(async () => {
     try {
       const { data } = await axios.get(`${BASE_URL}/whatsapp/chats`, getConfig());
-      
       if (isMounted.current) {
         setActiveChats(Array.isArray(data) ? data : []);
       }
@@ -66,7 +62,6 @@ export const useContacts = () => {
 
   const refreshAll = useCallback(async () => {
     if (isMounted.current) setLoading(true);
-    // Executa ambos em paralelo
     await Promise.all([fetchBlacklist(), fetchActiveChats()]);
     if (isMounted.current) setLoading(false);
   }, [fetchBlacklist, fetchActiveChats]);
@@ -74,13 +69,11 @@ export const useContacts = () => {
   const blockContact = async (phoneNumber: string, name: string) => {
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
-      
       await axios.post(
         `${BASE_URL}/contacts/block`, 
         { phoneNumber: cleanPhone, name }, 
-        getConfig() // Passa o token
+        getConfig()
       );
-      
       await refreshAll();
       return true;
     } catch (error) {
@@ -92,12 +85,10 @@ export const useContacts = () => {
   const unblockContact = async (jidOrPhone: string) => {
     try {
       const cleanPhone = jidOrPhone.replace('@s.whatsapp.net', '').replace(/\D/g, '');
-      
       await axios.delete(
         `${BASE_URL}/contacts/unblock/${cleanPhone}`, 
         getConfig()
       );
-      
       await refreshAll();
       return true;
     } catch (error) {
@@ -107,9 +98,9 @@ export const useContacts = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshAll]);
 
   return { 
     blacklist, 

@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { api } from './api';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import axios from 'axios';
+import { TOKEN_KEY } from '@/src/constants/app-keys';
+
+const BASE_URL = 'http://localhost:8080';
 
 export interface Message {
   role: 'user' | 'model';
@@ -18,22 +21,41 @@ export const useChatWindow = (selectedJid: string | null) => {
     return () => { isMounted.current = false; };
   }, []);
 
+  const getConfig = () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      }
+    };
+  };
+
   const fetchHistory = useCallback(async () => {
     if (!selectedJid) return;
 
     try {
-      const { data } = await api.get(`/whatsapp/history/${selectedJid}`);
+      const encodedJid = encodeURIComponent(selectedJid);
+      
+      const { data } = await axios.get(
+        `${BASE_URL}/whatsapp/history/${encodedJid}`, 
+        getConfig()
+      );
       
       if (isMounted.current) {
         setMessages(data);
       }
     } catch (error) {
-      console.error('Erro ao buscar histórico', error);
+      console.error('Erro ao buscar histórico:', error);
     }
   }, [selectedJid]);
 
   useEffect(() => {
-    if (!selectedJid) return;
+    if (!selectedJid) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMessages([]);
+        return;
+    }
 
     const initLoad = async () => {
       if (isMounted.current) setLoading(true);
@@ -50,7 +72,6 @@ export const useChatWindow = (selectedJid: string | null) => {
     initLoad();
 
     const interval = setInterval(fetchHistory, 3000);
-
     return () => clearInterval(interval);
   }, [selectedJid, fetchHistory]);
 

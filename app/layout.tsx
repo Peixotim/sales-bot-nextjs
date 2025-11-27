@@ -24,10 +24,8 @@ export default function RootLayout({
           children
         ) : (
           <PrivateRoute>
-            <Header />
-            <div className=""> 
+    
               {children}
-            </div>
           </PrivateRoute>
         )}
       </body>
