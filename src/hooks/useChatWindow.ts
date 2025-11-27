@@ -1,7 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8080/whatsapp';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { api } from './api';
 
 export interface Message {
   role: 'user' | 'model';
@@ -12,32 +10,54 @@ export const useChatWindow = (selectedJid: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
+  const fetchHistory = useCallback(async () => {
+    if (!selectedJid) return;
+
+    try {
+      const { data } = await api.get(`/whatsapp/history/${selectedJid}`);
+      
+      if (isMounted.current) {
+        setMessages(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar histórico', error);
+    }
+  }, [selectedJid]);
 
   useEffect(() => {
     if (!selectedJid) return;
 
-    const fetchHistory = async () => {
-      try {
-        const { data } = await axios.get(`${API_URL}/history/${selectedJid}`);
-        setMessages(data);
-      } catch (error) {
-        console.error('Erro ao buscar histórico', error);
+    const initLoad = async () => {
+      if (isMounted.current) setLoading(true);
+      await fetchHistory();
+      
+      if (isMounted.current) {
+        setLoading(false);
+        setTimeout(() => {
+            scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
       }
     };
 
-    setLoading(true);
-    fetchHistory().then(() => {
-        setLoading(false);
-        setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    });
+    initLoad();
 
     const interval = setInterval(fetchHistory, 3000);
 
     return () => clearInterval(interval);
-  }, [selectedJid]);
+  }, [selectedJid, fetchHistory]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   return { messages, loading, scrollRef };
