@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-
-const API_URL_CONTACTS = 'http://localhost:8080/contacts';
-const API_URL_WHATSAPP = 'http://localhost:8080/whatsapp';
+import { TOKEN_KEY } from '../constants/app-keys';
+const BASE_URL = 'http://localhost:8080';
 
 export interface BlockedContact {
   jid: string;
@@ -20,7 +19,6 @@ export const useContacts = () => {
   const [activeChats, setActiveChats] = useState<ActiveChat[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Ref para evitar atualizações em componentes desmontados
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -28,9 +26,22 @@ export const useContacts = () => {
     return () => { isMounted.current = false; };
   }, []);
 
+  // --- HELPER PARA CABEÇALHOS ---
+  // Como removemos o api.ts, precisamos gerar o header com token manualmente
+  const getConfig = () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      }
+    };
+  };
+
   const fetchBlacklist = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API_URL_CONTACTS}/blacklist`);
+      const { data } = await axios.get(`${BASE_URL}/contacts/blacklist`, getConfig());
+      
       if (isMounted.current) {
         setBlacklist(Array.isArray(data) ? data : []);
       }
@@ -42,7 +53,8 @@ export const useContacts = () => {
 
   const fetchActiveChats = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API_URL_WHATSAPP}/chats`);
+      const { data } = await axios.get(`${BASE_URL}/whatsapp/chats`, getConfig());
+      
       if (isMounted.current) {
         setActiveChats(Array.isArray(data) ? data : []);
       }
@@ -54,15 +66,21 @@ export const useContacts = () => {
 
   const refreshAll = useCallback(async () => {
     if (isMounted.current) setLoading(true);
+    // Executa ambos em paralelo
     await Promise.all([fetchBlacklist(), fetchActiveChats()]);
     if (isMounted.current) setLoading(false);
   }, [fetchBlacklist, fetchActiveChats]);
 
-  // Ações
   const blockContact = async (phoneNumber: string, name: string) => {
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
-      await axios.post(`${API_URL_CONTACTS}/block`, { phoneNumber: cleanPhone, name });
+      
+      await axios.post(
+        `${BASE_URL}/contacts/block`, 
+        { phoneNumber: cleanPhone, name }, 
+        getConfig() // Passa o token
+      );
+      
       await refreshAll();
       return true;
     } catch (error) {
@@ -74,7 +92,12 @@ export const useContacts = () => {
   const unblockContact = async (jidOrPhone: string) => {
     try {
       const cleanPhone = jidOrPhone.replace('@s.whatsapp.net', '').replace(/\D/g, '');
-      await axios.delete(`${API_URL_CONTACTS}/unblock/${cleanPhone}`);
+      
+      await axios.delete(
+        `${BASE_URL}/contacts/unblock/${cleanPhone}`, 
+        getConfig()
+      );
+      
       await refreshAll();
       return true;
     } catch (error) {
@@ -82,7 +105,6 @@ export const useContacts = () => {
       return false;
     }
   };
-
 
   useEffect(() => {
     refreshAll();
