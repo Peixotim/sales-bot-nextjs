@@ -1,35 +1,35 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { FloatingDock } from "@/components/FloatingDock";
+'use client';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import './globals.css';
+import { Inter } from 'next/font/google';
+import { usePathname } from 'next/navigation';
+import { PrivateRoute } from '@/components/PrivateRoute';
+import { Header } from '@/components/Header';
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Bot WhatsApp QR-CODE",
-  description: "Development by Peixotim",
-};
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const pathname = usePathname();
+  const publicRoutes = ['/login', '/register', '/forgot-password'];
+  const isPublicRoute = publicRoutes.includes(pathname);
+
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <FloatingDock/>
-        {children}
+    <html lang="pt-BR">
+      <body className={inter.className}>
+        {isPublicRoute ? (
+          children
+        ) : (
+          <PrivateRoute>
+            <Header />
+            <div className=""> 
+              {children}
+            </div>
+          </PrivateRoute>
+        )}
       </body>
     </html>
   );
