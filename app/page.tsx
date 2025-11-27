@@ -4,16 +4,18 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useWhatsApp } from '@/src/hooks/useWhatsApp';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'react-qr-code';
-import { Smartphone, RefreshCw, ShieldCheck, Zap, } from 'lucide-react';
-import { FloatingDock } from '@/components/FloatingDock';
+import { Smartphone, RefreshCw, ShieldCheck, Zap, Power } from 'lucide-react';
+import { clsx } from 'clsx';
+
 
 export default function Home() {
-  const { status, qrCode, connectedId } = useWhatsApp();
+  const { status, qrCode, connectedId, connectBot, isLoading } = useWhatsApp();
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 sm:p-8 relative font-sans selection:bg-neon selection:text-black">
-      <FloatingDock/>
+      
       <BackgroundBlobs />
+      
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -21,6 +23,7 @@ export default function Home() {
         className="relative z-10 w-full max-w-5xl glass-panel rounded-[3rem] p-8 sm:p-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
       >
         
+        {/* LADO ESQUERDO: TEXTOS */}
         <div className="flex flex-col gap-8">
           <div className="space-y-2">
             <motion.div 
@@ -37,7 +40,7 @@ export default function Home() {
             
             <h1 className="text-5xl sm:text-6xl font-bold leading-tight tracking-tighter">
               Automação <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Inteligente.</span>
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/40">Inteligente.</span>
             </h1>
             <p className="text-lg text-white/50 max-w-md leading-relaxed">
               Gerencie seus leads, responda com IA e escale suas vendas via WhatsApp com a tecnologia Gemini Flash.
@@ -47,6 +50,8 @@ export default function Home() {
           <div className="flex gap-4">
              <StatusBadge status={status} />
           </div>
+
+          {/* INFO CONECTADO */}
           <AnimatePresence>
             {status === 'CONNECTED' && connectedId && (
               <motion.div 
@@ -69,11 +74,13 @@ export default function Home() {
           </AnimatePresence>
         </div>
 
+        {/* LADO DIREITO: CARD DE AÇÃO */}
         <div className="flex justify-center lg:justify-end">
-          <div className="relative w-[350px] h-[450px] bg-dark/80 border border-white/10 rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-2xl overflow-hidden group">
+          <div className="relative w-[350px] h-[450px] bg-[#0A0A0A] border border-white/10 rounded-[2.5rem] p-6 flex flex-col items-center justify-center shadow-2xl overflow-hidden group">
 
             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-neon/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
+            {/* ESTADO 1: QR CODE PRONTO */}
             {status === 'QR_CODE_READY' && qrCode ? (
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -86,8 +93,10 @@ export default function Home() {
                   fgColor="#000000"
                   bgColor="#ffffff"
                 />
-                <p className="text-black mt-4 text-center font-medium text-sm">Escaneie com seu WhatsApp</p>
+                <p className="text-black mt-4 text-center font-medium text-sm animate-pulse">Escaneie no WhatsApp</p>
               </motion.div>
+            
+            /* ESTADO 2: CONECTADO */
             ) : status === 'CONNECTED' ? (
               <motion.div 
                 initial={{ scale: 0.8 }}
@@ -98,14 +107,36 @@ export default function Home() {
                   <ShieldCheck size={64} className="text-neon" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold text-white">Tudo Pronto</h3>
-                  <p className="text-white/40 text-sm mt-2">Seu bot está ouvindo e respondendo.</p>
+                  <h3 className="text-2xl font-bold text-white">Sistema Online</h3>
+                  <p className="text-white/40 text-sm mt-2">A IA está operando normalmente.</p>
                 </div>
               </motion.div>
+
+            /* ESTADO 3: DESCONECTADO (BOTÃO DE LIGAR) */
+            ) : status === 'DISCONNECTED' || status === 'OFFLINE' ? (
+               <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-6"
+               >
+                  <button 
+                    onClick={connectBot}
+                    disabled={isLoading}
+                    className="w-24 h-24 rounded-full border border-white/10 bg-white/5 hover:bg-neon/20 hover:border-neon/50 hover:text-neon text-white/50 transition-all duration-500 flex items-center justify-center group active:scale-95"
+                  >
+                    <Power size={40} className={clsx("transition-transform duration-500", isLoading && "animate-pulse")} />
+                  </button>
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-white">Bot Desligado</h3>
+                    <p className="text-white/40 text-sm mt-2">Clique acima para iniciar a sessão.</p>
+                  </div>
+               </motion.div>
+
+            /* ESTADO 4: CONECTANDO (LOADING) */
             ) : (
               <div className="flex flex-col items-center gap-4 opacity-50">
-                <RefreshCw className="animate-spin text-white" size={40} />
-                <p className="text-sm text-white/60">Conectando servidor...</p>
+                <RefreshCw className="animate-spin text-neon" size={40} />
+                <p className="text-sm text-white/60 uppercase tracking-widest">Iniciando Engine...</p>
               </div>
             )}
 
@@ -114,8 +145,7 @@ export default function Home() {
 
       </motion.div>
       
-     
-      <div className="absolute bottom-6 text-white/20 text-xs tracking-widest">
+      <div className="absolute bottom-6 text-white/20 text-xs tracking-widest uppercase">
             Desenvolvido por : Pedro Peixoto
       </div>  
     </main>
